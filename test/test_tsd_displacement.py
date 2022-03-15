@@ -16,8 +16,8 @@ import sys
 # '/home/pranjal.sahu/SlicerMorph/A_J_skull_temp2.vtk'
 # '/home/pranjal.sahu/SlicerMorph/NOD_SHILTJ_temp2.vtk'
 
-fixedMesh = itk.meshread('/home/pranjal.sahu/SlicerMorph/A_J_skull_temp3.vtk', itk.D)
-movingMesh = itk.meshread('/home/pranjal.sahu/SlicerMorph/NOD_SHILTJ_temp3.vtk', itk.D)
+fixedMesh = itk.meshread('/home/pranjal.sahu/SlicerMorph/A_J_skull_temp4.vtk', itk.D)
+movingMesh = itk.meshread('/home/pranjal.sahu/SlicerMorph/NOD_SHILTJ_temp4.vtk', itk.D)
 
 #fixedMesh = itk.meshread('/media/pranjal.sahu/moredata/ITK/Modules/External/ITKThinShellDemons/test/Baseline/fixedMesh.vtk', itk.D)
 #movingMesh = itk.meshread('/media/pranjal.sahu/moredata/ITK/Modules/External/ITKThinShellDemons/test/Baseline/movingMesh.vtk', itk.D)
@@ -62,7 +62,7 @@ print('Length is ', maxBounds - minBounds)
 #print('minBounds ', minBounds)
 #print('minBounds ', minBounds)
 
-imageDiagonal = 100
+imageDiagonal = 400
 spacing = np.sqrt(bounding_box.GetDiagonalLength2()) / imageDiagonal
 diff = maxBounds - minBounds
 
@@ -115,7 +115,7 @@ MetricType = itk.ThinShellDemonsMetricv4.MD3
 metric = MetricType.New()
 metric.SetStretchWeight(0.01)
 metric.SetBendWeight(0.01)
-metric.SetGeometricFeatureWeight(0.1)
+metric.SetGeometricFeatureWeight(0.05)
 metric.UseConfidenceWeightingOn()
 metric.UseMaximalDistanceConfidenceSigmaOff()
 metric.UpdateFeatureMatchingAtEachIterationOn()
@@ -138,7 +138,7 @@ shiftScaleEstimator.SetVirtualDomainPointSet(metric.GetVirtualTransformedPointSe
 optimizer = itk.ConjugateGradientLineSearchOptimizerv4Template.D.New()
 optimizer.SetNumberOfIterations( 50 )
 optimizer.SetScalesEstimator( shiftScaleEstimator )
-optimizer.SetMaximumStepSizeInPhysicalUnits( 5 )
+optimizer.SetMaximumStepSizeInPhysicalUnits( 0.05 )
 optimizer.SetMinimumConvergenceValue( 0.0 )
 optimizer.SetConvergenceWindowSize( 10 )
 
