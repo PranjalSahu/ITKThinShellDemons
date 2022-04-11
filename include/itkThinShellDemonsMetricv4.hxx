@@ -252,8 +252,10 @@ ThinShellDemonsMetricv4< TFixedMesh, TMovingMesh, TInternalComputationValueType 
     bend += dx * (degree * 4 / (degree+nDegree));
     }
 
-  bendEnergy = bEnergy.GetSquaredNorm() / degree;
-  stretchEnergy /= degree;
+  if (degree > 0){
+    bendEnergy = bEnergy.GetSquaredNorm() / degree;
+    stretchEnergy /= degree;
+  }
 }
 
 /* Function definition of the original method definition in itkPointSetToPointSetMetric*/
@@ -286,8 +288,17 @@ ThinShellDemonsMetricv4< TFixedMesh, TMovingMesh, TInternalComputationValueType 
 {
   
   FeaturePointType fpoint = this->GetFeaturePoint(point, fixedCurvature->GetPointData()->ElementAt(identifier));
-  
-  PointIdentifier mPointId = this->m_MovingTransformedFeaturePointsLocator->FindClosestPoint(fpoint);
+
+  const size_t                   num_results = 1;
+  size_t                         mPointId;
+  num_t                          out_dist_sqr;
+
+  nanoflann::KNNResultSet<num_t> resultSet(num_results);
+  resultSet.init(&mPointId, &out_dist_sqr);
+  this->m_MovingTransformedFeaturePointsLocator1->findNeighbors(
+      resultSet, &fpoint[0], nanoflann::SearchParams(10));
+
+  //PointIdentifier mPointId = this->m_MovingTransformedFeaturePointsLocator->FindClosestPoint(fpoint);
   PointType closestPoint = this->m_MovingTransformedPointSet->GetPoint(mPointId);
 
   VectorType direction = closestPoint - point;
@@ -446,22 +457,6 @@ ThinShellDemonsMetricv4< TFixedMesh, TMovingMesh, TInternalComputationValueType 
     kdtree_adaptor adaptor(features->GetPoints());
     this->m_MovingTransformedFeaturePointsLocator1 = new index_t(FixedPointDimension+1,  adaptor, nanoflann::KDTreeSingleIndexAdaptorParams(10));
     this->m_MovingTransformedFeaturePointsLocator1->buildIndex();
-
-    const size_t                   num_results = 1;
-    size_t                         ret_index;
-    num_t                          out_dist_sqr;
-
-    auto query_pt = features->GetPoints()->GetElement(10);
-    nanoflann::KNNResultSet<num_t> resultSet(num_results);
-    resultSet.init(&ret_index, &out_dist_sqr);
-    this->m_MovingTransformedFeaturePointsLocator1->findNeighbors(
-        resultSet, &query_pt[0], nanoflann::SearchParams(10));
-
-    std::cout << "knnSearch(nn=" << num_results << "): \n";
-    std::cout << "ret_index=" << ret_index
-              << " out_dist_sqr=" << out_dist_sqr << std::endl;
-                  
-    //this->m_MovingTransformedFeaturePointsLocator1->computeBoundingBox();
   }
 
   //Compute confidence sigma

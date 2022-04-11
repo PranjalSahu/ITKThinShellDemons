@@ -70,8 +70,6 @@ struct KDTreeVectorOfVectorsAdaptor
     KDTreeVectorOfVectorsAdaptor(const VectorOfVectorsType * mat)
         : m_data(mat)
     {
-        std::cout << "Number of Points inside the adaptor " << mat->size() << std::endl;
-
         assert(ma->size() != 0 && mat[0]->size() != 0);
         const size_t dims = mat->GetElement(0).size();
 
