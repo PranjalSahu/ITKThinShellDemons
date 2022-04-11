@@ -22,7 +22,6 @@
 #include "itkThinShellDemonsMetricv4.h"
 #include "itkPointSet.h"
 #include <math.h>
-
 namespace itk
 {
 
@@ -442,6 +441,13 @@ ThinShellDemonsMetricv4< TFixedMesh, TMovingMesh, TInternalComputationValueType 
     this->m_MovingTransformedFeaturePointsLocator->SetPoints(
         features->GetPoints());
     this->m_MovingTransformedFeaturePointsLocator->Initialize();
+
+  
+    // Instantiate KDD Point Locator
+    kdtree_adaptor adaptor(features->GetPoints());
+    //FeaturePointsLocatorPointer1 kdtree1 = new index_t(
+    //        4,  &adaptor/* adaptor */,
+    //        nanoflann::KDTreeSingleIndexAdaptorParams(10));
   }
 
   //Compute confidence sigma

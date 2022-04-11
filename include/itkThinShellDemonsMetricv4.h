@@ -24,6 +24,7 @@
 #include "itkTriangleMeshCurvatureCalculator.h"
 #include "itkMeshFileWriter.h"
 #include "itkMeshFileReader.h"
+#include "KDTreeVectorOfVectorsAdaptor.h"
 
 namespace itk
 {
@@ -188,16 +189,36 @@ protected:
   ThinShellDemonsMetricv4();
   virtual ~ThinShellDemonsMetricv4() override = default;
 
+  using num_t = double;
+  //int DIM = 4;
+  //using self_t =
+  //      KDTreeVectorOfVectorsAdaptor<VectorOfVectorsType, num_t, 4, Distance>;
+  //using VectorOfVectorsType = typename std::vector<std::vector<double>>;
+  
   //Create a points locator for feature matching
   using FeaturePointSetType = PointSet< double, FixedPointDimension+1>;
   using FeaturePointSetPointer = typename FeaturePointSetType::Pointer;
   using FeaturePointType = typename FeaturePointSetType::PointType;
   using FeaturePointsContainer = typename FeaturePointSetType::PointsContainer;
   using FeaturePointsContainerPointer = typename FeaturePointsContainer::Pointer;
-  using FeaturePointsLocatorType = PointsLocator<FeaturePointsContainer>;
+  using FeaturePointsLocatorType    = PointsLocator<FeaturePointsContainer>;
   using FeaturePointsLocatorPointer = typename FeaturePointsLocatorType::Pointer;
 
   mutable FeaturePointsLocatorPointer m_MovingTransformedFeaturePointsLocator;
+
+  using STLContainerType = FeaturePointsContainer;
+  //using VectorOfVectorsType = FeaturePointsContainerPointer;
+  using IndexType = size_t;
+  using kdtree_adaptor =
+      KDTreeVectorOfVectorsAdaptor<STLContainerType, num_t, 3+1, nanoflann::metric_L2>;
+  //using Distance = typename nanoflann::metric_L2;
+  //using metric_t =
+  //    typename nanoflann::metric_L2::template traits<num_t, self_t>::distance_t;
+  using index_t =
+      nanoflann::KDTreeSingleIndexAdaptor<STLContainerType, kdtree_adaptor>;
+
+  using FeaturePointsLocatorPointer1 = index_t *;
+  mutable FeaturePointsLocatorPointer1 kdtree1;
 
   /**
    * Prepare point sets for use.
