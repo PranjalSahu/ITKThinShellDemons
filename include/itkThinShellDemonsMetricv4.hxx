@@ -37,7 +37,7 @@ ThinShellDemonsMetricv4< TFixedMesh, TMovingMesh, TInternalComputationValueType 
   m_UseMaximalDistanceConfidenceSigma = true;
   m_UseConfidenceWeighting = true;
   m_UpdateFeatureMatchingAtEachIteration = false;
-  m_MovingTransformedFeaturePointsLocator = nullptr;
+  m_MovingTransformedFeaturePointsLocator1 = nullptr;
   
   fixedITKMesh = nullptr;
   movingITKMesh = nullptr;
@@ -129,9 +129,9 @@ ThinShellDemonsMetricv4< TFixedMesh, TMovingMesh, TInternalComputationValueType 
 
   //Compute confidence sigma
   if( this->m_UseMaximalDistanceConfidenceSigma )
-    {
+  {
     this->ComputeMaximalDistanceSigma();
-    }
+  }
 }
 
 /* Iterate over all the cells in which a point belongs and get the points present in those cells*/
@@ -194,9 +194,9 @@ ThinShellDemonsMetricv4< TFixedMesh, TMovingMesh, TInternalComputationValueType 
   double dist = v.GetSquaredNorm();
   double confidence = exp( -dist / (2*variance) );
   if( m_UpdateFeatureMatchingAtEachIteration )
-    {
+  {
     derivative = (-confidence/variance) * v;
-    }
+  }
   return confidence;
 }
 
@@ -298,7 +298,6 @@ ThinShellDemonsMetricv4< TFixedMesh, TMovingMesh, TInternalComputationValueType 
   this->m_MovingTransformedFeaturePointsLocator1->findNeighbors(
       resultSet, &fpoint[0], nanoflann::SearchParams(10));
 
-  //PointIdentifier mPointId = this->m_MovingTransformedFeaturePointsLocator->FindClosestPoint(fpoint);
   PointType closestPoint = this->m_MovingTransformedPointSet->GetPoint(mPointId);
 
   VectorType direction = closestPoint - point;
@@ -306,9 +305,9 @@ ThinShellDemonsMetricv4< TFixedMesh, TMovingMesh, TInternalComputationValueType 
   double confidence = 1;
   VectorType confidenceDerivative{};
   if(this->m_UseConfidenceWeighting)
-    {
+  {
     confidence = this->ComputeConfidenceValueAndDerivative(direction, confidenceDerivative);
-    }
+  }
   double sE = 0;
   double bE = 0;
   VectorType sD;
@@ -319,9 +318,9 @@ ThinShellDemonsMetricv4< TFixedMesh, TMovingMesh, TInternalComputationValueType 
   /* Refer to Equation 2 in the MIUA2015 paper */
   value = confidence * dist + m_StretchWeight * sE + m_BendWeight * bE;
   if(this->m_UseConfidenceWeighting && this->m_UpdateFeatureMatchingAtEachIteration)
-    {
+  {
     dx += dist * confidenceDerivative;
-    }
+  }
   derivative = dx;
 }
 
@@ -405,22 +404,36 @@ void
 ThinShellDemonsMetricv4< TFixedMesh, TMovingMesh, TInternalComputationValueType >
 ::ComputeMaximalDistanceSigma()
   const
-{
-  FeaturePointsContainerPointer mpoints =
-    this->m_MovingTransformedFeaturePointsLocator->GetPoints();
+{ 
+  auto mpointsA = this->m_MovingTransformedFeaturePointsLocator1->dataset;
+  auto mpoints = mpointsA.m_data;
+
   double maximalDistance = 0;
+
+  const size_t                   num_results = 1;
+  size_t                         mPointId;
+  num_t                          out_dist_sqr;
+
+  nanoflann::KNNResultSet<num_t> resultSet(num_results);
+
   for (PointIdentifier i = 0; i < fixedITKMesh->GetNumberOfPoints(); i++)
   {
     FeaturePointType fpoint = this->GetFeaturePoint(fixedITKMesh->GetPoint(i), fixedCurvature->GetPointData()->ElementAt(i));
-    PointIdentifier id = this->m_MovingTransformedFeaturePointsLocator->FindClosestPoint(fpoint);
-    FeaturePointType cpoint = mpoints->GetElement(id);
-    double dist = cpoint.SquaredEuclideanDistanceTo(fpoint);
-    if( dist > maximalDistance )
-    {
-      maximalDistance = dist;
-      }
-    }
-  this->m_ConfidenceSigma = sqrt(maximalDistance)/3;
+
+    //std::cout << "Checking point " << i << " " << fpoint << std::endl;
+    resultSet.init(&mPointId, &out_dist_sqr);
+    //this->m_MovingTransformedFeaturePointsLocator1->findNeighbors(
+    //   resultSet, &fpoint[0], nanoflann::SearchParams(10));
+    
+    // FeaturePointType cpoint = mpoints->GetElement(mPointId);
+    // double dist = cpoint.SquaredEuclideanDistanceTo(fpoint);
+    // if( dist > maximalDistance )
+    // {
+    //   maximalDistance = dist;
+    // }
+  }
+  
+  this->m_ConfidenceSigma = 1;//sqrt(maximalDistance)/3;
 }
 
 template< typename TFixedMesh, typename TMovingMesh, typename TInternalComputationValueType >
@@ -429,31 +442,26 @@ ThinShellDemonsMetricv4< TFixedMesh, TMovingMesh, TInternalComputationValueType 
 ::InitializeFeaturePointsLocators()
   const
 {
-  //Update fixed curvature
+  std::cout << "Inside the InitializeFeaturePointsLocators " << std::endl;
+
+  // Update fixed curvature
   if(!fixedCurvature || this->m_UpdateFeatureMatchingAtEachIteration){
     this->GenerateFeaturePointSets(true);
   }
 
-  //Update moving curvature feature locator
-  if( !this->m_MovingTransformedFeaturePointsLocator
+  // Update moving curvature feature locator
+  if( !this->m_MovingTransformedFeaturePointsLocator1
       || this->m_UpdateFeatureMatchingAtEachIteration )
   {
     if (!this->m_MovingTransformedPointSet)
     {
       itkExceptionMacro("The moving transformed point set does not exist.");
     }
-    if (!this->m_MovingTransformedFeaturePointsLocator)
-    {
-      this->m_MovingTransformedFeaturePointsLocator = FeaturePointsLocatorType::New();
-    }
-
+    
     // Only for the moving mesh, pass false to the GenerateFeaturePointSets
     FeaturePointSetPointer features = this->GenerateFeaturePointSets(false);
-    this->m_MovingTransformedFeaturePointsLocator->SetPoints(
-        features->GetPoints());
-    this->m_MovingTransformedFeaturePointsLocator->Initialize();
-
-    // Instantiate KDD Point Locator
+    
+    // Instantiate and initialize the KDD Point Locator
     kdtree_adaptor adaptor(features->GetPoints());
     this->m_MovingTransformedFeaturePointsLocator1 = new index_t(FixedPointDimension+1,  adaptor, nanoflann::KDTreeSingleIndexAdaptorParams(10));
     this->m_MovingTransformedFeaturePointsLocator1->buildIndex();
@@ -478,9 +486,9 @@ ThinShellDemonsMetricv4< TFixedMesh, TMovingMesh, TInternalComputationValueType 
 {
   FeaturePointType fpoint;
   for(unsigned int i=0; i<PointType::Dimension; i++)
-    {
+  {
     fpoint[i] = v[i];
-    }
+  }
   fpoint[PointType::Dimension] = c * m_GeometricFeatureWeight;
   return fpoint;
 }
@@ -493,9 +501,9 @@ ThinShellDemonsMetricv4< TFixedMesh, TMovingMesh, TInternalComputationValueType 
 {
   FeaturePointType fpoint;
   for(unsigned int i=0; i<PointType::Dimension; i++)
-    {
+  {
     fpoint[i] = v[i];
-    }
+  }
   fpoint[PointType::Dimension] = c * m_GeometricFeatureWeight;
   return fpoint;
 }

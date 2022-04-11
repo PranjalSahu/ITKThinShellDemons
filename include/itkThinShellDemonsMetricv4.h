@@ -198,8 +198,6 @@ protected:
   using FeaturePointsLocatorType    = PointsLocator<FeaturePointsContainer>;
   using FeaturePointsLocatorPointer = typename FeaturePointsLocatorType::Pointer;
 
-  mutable FeaturePointsLocatorPointer m_MovingTransformedFeaturePointsLocator;
-
   using STLContainerType = FeaturePointsContainer;
   using num_t = float;
 
