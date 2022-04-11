@@ -188,12 +188,6 @@ public:
 protected:
   ThinShellDemonsMetricv4();
   virtual ~ThinShellDemonsMetricv4() override = default;
-
-  using num_t = double;
-  //int DIM = 4;
-  //using self_t =
-  //      KDTreeVectorOfVectorsAdaptor<VectorOfVectorsType, num_t, 4, Distance>;
-  //using VectorOfVectorsType = typename std::vector<std::vector<double>>;
   
   //Create a points locator for feature matching
   using FeaturePointSetType = PointSet< double, FixedPointDimension+1>;
@@ -210,10 +204,8 @@ protected:
   //using VectorOfVectorsType = FeaturePointsContainerPointer;
   using IndexType = size_t;
   using kdtree_adaptor =
-      KDTreeVectorOfVectorsAdaptor<STLContainerType, num_t, 3+1, nanoflann::metric_L2>;
-  //using Distance = typename nanoflann::metric_L2;
-  //using metric_t =
-  //    typename nanoflann::metric_L2::template traits<num_t, self_t>::distance_t;
+      KDTreeVectorOfVectorsAdaptor<STLContainerType, double, FixedPointDimension+1, nanoflann::metric_L2>;
+  
   using index_t =
       nanoflann::KDTreeSingleIndexAdaptor<STLContainerType, kdtree_adaptor>;
 
