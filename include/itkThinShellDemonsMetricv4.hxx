@@ -444,7 +444,24 @@ ThinShellDemonsMetricv4< TFixedMesh, TMovingMesh, TInternalComputationValueType 
 
     // Instantiate KDD Point Locator
     kdtree_adaptor adaptor(features->GetPoints());
-    this->kdtree1 = new index_t(FixedPointDimension+1,  adaptor, nanoflann::KDTreeSingleIndexAdaptorParams(10));
+    this->m_MovingTransformedFeaturePointsLocator1 = new index_t(FixedPointDimension+1,  adaptor, nanoflann::KDTreeSingleIndexAdaptorParams(10));
+    this->m_MovingTransformedFeaturePointsLocator1->buildIndex();
+
+    const size_t                   num_results = 1;
+    size_t                         ret_index;
+    num_t                          out_dist_sqr;
+
+    auto query_pt = features->GetPoints()->GetElement(10);
+    nanoflann::KNNResultSet<num_t> resultSet(num_results);
+    resultSet.init(&ret_index, &out_dist_sqr);
+    this->m_MovingTransformedFeaturePointsLocator1->findNeighbors(
+        resultSet, &query_pt[0], nanoflann::SearchParams(10));
+
+    std::cout << "knnSearch(nn=" << num_results << "): \n";
+    std::cout << "ret_index=" << ret_index
+              << " out_dist_sqr=" << out_dist_sqr << std::endl;
+                  
+    //this->m_MovingTransformedFeaturePointsLocator1->computeBoundingBox();
   }
 
   //Compute confidence sigma

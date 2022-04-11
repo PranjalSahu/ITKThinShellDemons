@@ -215,7 +215,7 @@ protected:
         nanoflann::KDTreeSingleIndexAdaptor<metric_t, kdtree_adaptor, FixedPointDimension+1, size_t>;
   
   using FeaturePointsLocatorPointer1 = index_t *;
-  mutable FeaturePointsLocatorPointer1 kdtree1;
+  mutable FeaturePointsLocatorPointer1 m_MovingTransformedFeaturePointsLocator1;
 
   /**
    * Prepare point sets for use.
