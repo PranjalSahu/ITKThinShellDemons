@@ -442,12 +442,9 @@ ThinShellDemonsMetricv4< TFixedMesh, TMovingMesh, TInternalComputationValueType 
         features->GetPoints());
     this->m_MovingTransformedFeaturePointsLocator->Initialize();
 
-  
     // Instantiate KDD Point Locator
     kdtree_adaptor adaptor(features->GetPoints());
-    //FeaturePointsLocatorPointer1 kdtree1 = new index_t(
-    //        4,  &adaptor/* adaptor */,
-    //        nanoflann::KDTreeSingleIndexAdaptorParams(10));
+    this->kdtree1 = new index_t(FixedPointDimension+1,  adaptor, nanoflann::KDTreeSingleIndexAdaptorParams(10));
   }
 
   //Compute confidence sigma

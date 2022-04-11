@@ -201,14 +201,19 @@ protected:
   mutable FeaturePointsLocatorPointer m_MovingTransformedFeaturePointsLocator;
 
   using STLContainerType = FeaturePointsContainer;
-  //using VectorOfVectorsType = FeaturePointsContainerPointer;
+  using num_t = float;
+
+  
   using IndexType = size_t;
   using kdtree_adaptor =
-      KDTreeVectorOfVectorsAdaptor<STLContainerType, double, FixedPointDimension+1, nanoflann::metric_L2>;
+      KDTreeVectorOfVectorsAdaptor<STLContainerType, float, FixedPointDimension+1, nanoflann::metric_L2>;
+  
+  using metric_t =
+        typename nanoflann::metric_L2::template traits<num_t, kdtree_adaptor>::distance_t;
   
   using index_t =
-      nanoflann::KDTreeSingleIndexAdaptor<STLContainerType, kdtree_adaptor>;
-
+        nanoflann::KDTreeSingleIndexAdaptor<metric_t, kdtree_adaptor, FixedPointDimension+1, size_t>;
+  
   using FeaturePointsLocatorPointer1 = index_t *;
   mutable FeaturePointsLocatorPointer1 kdtree1;
 
