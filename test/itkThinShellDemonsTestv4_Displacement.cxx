@@ -165,7 +165,7 @@ int itkThinShellDemonsTestv4_Displacement( int args, char *argv [])
   metric->SetBendWeight(5);
   metric->SetGeometricFeatureWeight(10);
   metric->UseConfidenceWeightingOn();
-  metric->UseMaximalDistanceConfidenceSigmaOn();
+  metric->UseMaximalDistanceConfidenceSigmaOff();
   metric->UpdateFeatureMatchingAtEachIterationOn();
   metric->SetMovingTransform( transform );
   //Reversed due to using points instead of an image

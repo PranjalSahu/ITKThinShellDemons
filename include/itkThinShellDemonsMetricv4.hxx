@@ -295,8 +295,12 @@ ThinShellDemonsMetricv4< TFixedMesh, TMovingMesh, TInternalComputationValueType 
 
   nanoflann::KNNResultSet<num_t> resultSet(num_results);
   resultSet.init(&mPointId, &out_dist_sqr);
+  
+  std::cout << "Finding point " << fpoint << std::endl;
   this->m_MovingTransformedFeaturePointsLocator1->findNeighbors(
       resultSet, &fpoint[0], nanoflann::SearchParams(10));
+
+  std::cout << "Found point " << mPointId << " " << out_dist_sqr << std::endl;
 
   //PointIdentifier mPointId = this->m_MovingTransformedFeaturePointsLocator->FindClosestPoint(fpoint);
   PointType closestPoint = this->m_MovingTransformedPointSet->GetPoint(mPointId);
@@ -429,6 +433,8 @@ ThinShellDemonsMetricv4< TFixedMesh, TMovingMesh, TInternalComputationValueType 
 ::InitializeFeaturePointsLocators()
   const
 {
+  std::cout << "Inside InitializeFeaturePointsLocators " << std::endl;
+
   //Update fixed curvature
   if(!fixedCurvature || this->m_UpdateFeatureMatchingAtEachIteration){
     this->GenerateFeaturePointSets(true);
@@ -457,6 +463,8 @@ ThinShellDemonsMetricv4< TFixedMesh, TMovingMesh, TInternalComputationValueType 
     kdtree_adaptor adaptor(features->GetPoints());
     this->m_MovingTransformedFeaturePointsLocator1 = new index_t(FixedPointDimension+1,  adaptor, nanoflann::KDTreeSingleIndexAdaptorParams(10));
     this->m_MovingTransformedFeaturePointsLocator1->buildIndex();
+
+    std::cout << "Tree Index Built " << std::endl;
   }
 
   //Compute confidence sigma

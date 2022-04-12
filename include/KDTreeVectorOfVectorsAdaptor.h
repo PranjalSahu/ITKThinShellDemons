@@ -70,7 +70,7 @@ struct KDTreeVectorOfVectorsAdaptor
     KDTreeVectorOfVectorsAdaptor(const VectorOfVectorsType * mat)
         : m_data(mat)
     {
-        assert(ma->size() != 0 && mat[0]->size() != 0);
+        assert(mat->size() != 0 && mat->GetElement(0).size() != 0);
         const size_t dims = mat->GetElement(0).size();
 
         if (DIM > 0 && static_cast<int>(dims) != DIM)
