@@ -42,6 +42,7 @@ ThinShellDemonsMetricv4< TFixedMesh, TMovingMesh, TInternalComputationValueType 
   fixedITKMesh = nullptr;
   movingITKMesh = nullptr;
   fixedCurvature = nullptr;
+  adaptor = new kdtree_adaptor;
 }
 
 /* Set the points and cells for the mesh */
@@ -374,7 +375,7 @@ ThinShellDemonsMetricv4< TFixedMesh, TMovingMesh, TInternalComputationValueType 
   curvature_filter->Compute();
   auto curvature_output = curvature_filter->GetGaussCurvatureData();
   
-  FeaturePointSetPointer        features = FeaturePointSetType::New();
+  
 
   if( fixed )
     {
@@ -393,12 +394,19 @@ ThinShellDemonsMetricv4< TFixedMesh, TMovingMesh, TInternalComputationValueType 
     }
   else
     {
-    auto fPoints = features->GetPoints();
-    for (PointIdentifier i = 0; i < currentMesh->GetNumberOfPoints(); i++)
-    {
-      FeaturePointType point = this->GetFeaturePoint(currentMesh->GetPoint(i), curvature_output->GetElement(i));
-      fPoints->InsertElement(i, point);
-    }
+      if (features == nullptr)
+      {
+        features = FeaturePointSetType::New();
+        features->GetPoints()->Reserve(currentMesh->GetNumberOfPoints());
+        //features->
+      }
+
+      auto fPoints = features->GetPoints();
+      for (PointIdentifier i = 0; i < currentMesh->GetNumberOfPoints(); i++)
+      {
+        FeaturePointType point = this->GetFeaturePoint(currentMesh->GetPoint(i), curvature_output->GetElement(i));
+        fPoints->InsertElement(i, point);
+      }
   }
 
   return features;
@@ -454,14 +462,15 @@ ThinShellDemonsMetricv4< TFixedMesh, TMovingMesh, TInternalComputationValueType 
     }
 
     // Only for the moving mesh, pass false to the GenerateFeaturePointSets
-    FeaturePointSetPointer features = this->GenerateFeaturePointSets(false);
+    this->GenerateFeaturePointSets(false);
     this->m_MovingTransformedFeaturePointsLocator->SetPoints(
         features->GetPoints());
     this->m_MovingTransformedFeaturePointsLocator->Initialize();
 
+    adaptor->SetPoints(features->GetPoints());
     // Instantiate KDD Point Locator
-    kdtree_adaptor adaptor(features->GetPoints());
-    this->m_MovingTransformedFeaturePointsLocator1 = new index_t(FixedPointDimension+1,  adaptor, nanoflann::KDTreeSingleIndexAdaptorParams(10));
+    this->m_MovingTransformedFeaturePointsLocator1 = new index_t(FixedPointDimension+1, nanoflann::KDTreeSingleIndexAdaptorParams(10));
+    this->m_MovingTransformedFeaturePointsLocator1->dataset = adaptor;
     this->m_MovingTransformedFeaturePointsLocator1->buildIndex();
 
     std::cout << "Tree Index Built " << std::endl;

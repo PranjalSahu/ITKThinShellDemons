@@ -199,6 +199,7 @@ protected:
   using FeaturePointsLocatorPointer = typename FeaturePointsLocatorType::Pointer;
 
   mutable FeaturePointsLocatorPointer m_MovingTransformedFeaturePointsLocator;
+  mutable FeaturePointSetPointer        features;// = FeaturePointSetType::New();
 
   using STLContainerType = FeaturePointsContainer;
   using num_t = float;
@@ -208,6 +209,7 @@ protected:
   using kdtree_adaptor =
       KDTreeVectorOfVectorsAdaptor<STLContainerType, float, FixedPointDimension+1, nanoflann::metric_L2>;
   
+  mutable kdtree_adaptor * adaptor;
   using metric_t =
         typename nanoflann::metric_L2::template traits<num_t, kdtree_adaptor>::distance_t;
   
