@@ -415,13 +415,24 @@ ThinShellDemonsMetricv4< TFixedMesh, TMovingMesh, TInternalComputationValueType 
   const
 {
   FeaturePointsContainerPointer mpoints =
-    this->m_MovingTransformedFeaturePointsLocator->GetPoints();
+    this->features->GetPoints();
   double maximalDistance = 0;
   for (PointIdentifier i = 0; i < fixedITKMesh->GetNumberOfPoints(); i++)
   {
     FeaturePointType fpoint = this->GetFeaturePoint(fixedITKMesh->GetPoint(i), fixedCurvature->GetPointData()->ElementAt(i));
-    PointIdentifier id = this->m_MovingTransformedFeaturePointsLocator->FindClosestPoint(fpoint);
-    FeaturePointType cpoint = mpoints->GetElement(id);
+
+    const size_t                   num_results = 1;
+    size_t                         mPointId;
+    num_t                          out_dist_sqr;
+
+    nanoflann::KNNResultSet<num_t> resultSet(num_results);
+    resultSet.init(&mPointId, &out_dist_sqr);
+  
+    this->adaptor->index->findNeighbors(
+        resultSet, &fpoint[0], nanoflann::SearchParams(10));
+
+    //PointIdentifier id = this->m_MovingTransformedFeaturePointsLocator->FindClosestPoint(fpoint);
+    FeaturePointType cpoint = mpoints->GetElement(mPointId);
     double dist = cpoint.SquaredEuclideanDistanceTo(fpoint);
     if( dist > maximalDistance )
     {
@@ -437,7 +448,7 @@ ThinShellDemonsMetricv4< TFixedMesh, TMovingMesh, TInternalComputationValueType 
 ::InitializeFeaturePointsLocators()
   const
 {
-  std::cout << "Inside InitializeFeaturePointsLocators " << std::endl;
+  //std::cout << "Inside InitializeFeaturePointsLocators " << std::endl;
 
   //Update fixed curvature
   if(!fixedCurvature || this->m_UpdateFeatureMatchingAtEachIteration){
@@ -459,9 +470,9 @@ ThinShellDemonsMetricv4< TFixedMesh, TMovingMesh, TInternalComputationValueType 
 
     // Only for the moving mesh, pass false to the GenerateFeaturePointSets
     this->GenerateFeaturePointSets(false);
-    this->m_MovingTransformedFeaturePointsLocator->SetPoints(
-        features->GetPoints());
-    this->m_MovingTransformedFeaturePointsLocator->Initialize();
+    //this->m_MovingTransformedFeaturePointsLocator->SetPoints(
+    //    features->GetPoints());
+    //this->m_MovingTransformedFeaturePointsLocator->Initialize();
 
     if (point_dataset.size() == 0){
       point_dataset.resize(features->GetPoints()->Size());
