@@ -64,40 +64,28 @@ struct KDTreeVectorOfVectorsAdaptor
     /** The kd-tree index for the user to call its methods as usual with any
      * other FLANN index */
     index_t* index = nullptr;
-    typename VectorOfVectorsType::Pointer m_data;
+    const VectorOfVectorsType& m_data;
 
 
     /// Constructor: takes a const ref to the vector of vectors object with the
     /// data points
-    KDTreeVectorOfVectorsAdaptor(const VectorOfVectorsType * mat)
+   KDTreeVectorOfVectorsAdaptor(
+        const size_t /* dimensionality */, const VectorOfVectorsType& mat,
+        const int leaf_max_size = 10)
+        : m_data(mat)
     {
-        assert(mat->size() != 0 && mat->GetElement(0).size() != 0);
-        const size_t dims = mat->GetElement(0).size();
-
+        assert(mat.size() != 0 && mat[0].size() != 0);
+        const size_t dims = mat[0].size();
         if (DIM > 0 && static_cast<int>(dims) != DIM)
             throw std::runtime_error(
                 "Data set dimensionality does not match the 'DIM' template "
                 "argument");
-    }
-
-    KDTreeVectorOfVectorsAdaptor()
-    {}
-
-    void SetPoints(const VectorOfVectorsType * mat)
-    {
-        std::cout << "Setting Points " << mat << std::endl;
-        m_data = VectorOfVectorsType::New();
-        m_data->Reserve(mat->size());
-        std::cout << "Setting Points size after resertving " << m_data->size() << std::endl;
-        for(int i=0; i < mat->size(); ++i){
-            m_data->SetElement(i, mat->GetElement(i));
-            //std::cout << "Setting Element " << m_data->GetElement(i) << std::endl;
-        }
+        index = new index_t(
+           static_cast<int>(dims), *this /* adaptor */,
+           nanoflann::KDTreeSingleIndexAdaptorParams(leaf_max_size));
     }
 
     ~KDTreeVectorOfVectorsAdaptor() { delete index; }
-
-    
 
     /** Query for the \a num_closest closest points to a given point
      *  (entered as query_point[0:dim-1]).
@@ -124,13 +112,16 @@ struct KDTreeVectorOfVectorsAdaptor
     self_t&       derived() { return *this; }
 
     // Must return the number of data points
-    inline size_t kdtree_get_point_count() const { return m_data->size(); }
+    inline size_t kdtree_get_point_count() const { return m_data.size(); }
 
     // Returns the dim'th component of the idx'th point in the class:
     inline num_t kdtree_get_pt(const size_t idx, const size_t dim) const
     {
         //std::cout << idx << " Checking element " << m_data->GetElement(idx) << std::endl;
-        return m_data->GetElement(idx).GetElement(dim);
+        //auto temp = m_data[idx];
+        //std::cout << temp << std::endl;
+        //std::cout << temp.GetElement(dim) << std::endl;
+        return m_data[idx][dim];
     }
 
     // Optional bounding-box computation: return false to default to a standard

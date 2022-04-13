@@ -109,6 +109,8 @@ public:
 
   using PointSetPointer = typename Superclass::FixedPointSetType::ConstPointer;
 
+  mutable std::vector<std::vector<float>> point_dataset;
+
   void Initialize(void) override;
 
   MeasureType
@@ -201,7 +203,8 @@ protected:
   mutable FeaturePointsLocatorPointer m_MovingTransformedFeaturePointsLocator;
   mutable FeaturePointSetPointer        features;// = FeaturePointSetType::New();
 
-  using STLContainerType = FeaturePointsContainer;
+  //using STLContainerType = FeaturePointsContainer;
+  using STLContainerType = std::vector<std::vector<float>>;
   using num_t = float;
 
   
@@ -209,7 +212,9 @@ protected:
   using kdtree_adaptor =
       KDTreeVectorOfVectorsAdaptor<STLContainerType, float, FixedPointDimension+1, nanoflann::metric_L2>;
   
-  mutable kdtree_adaptor * adaptor;
+  typedef KDTreeVectorOfVectorsAdaptor< STLContainerType, float >  my_kd_tree_t;
+
+  mutable my_kd_tree_t * adaptor;
   using metric_t =
         typename nanoflann::metric_L2::template traits<num_t, kdtree_adaptor>::distance_t;
   
@@ -217,6 +222,7 @@ protected:
         nanoflann::KDTreeSingleIndexAdaptor<metric_t, kdtree_adaptor, FixedPointDimension+1, size_t>;
   
   using FeaturePointsLocatorPointer1 = index_t *;
+  //kdtree_adaptor kdtree1;
   mutable FeaturePointsLocatorPointer1 m_MovingTransformedFeaturePointsLocator1 = nullptr;
 
   /**

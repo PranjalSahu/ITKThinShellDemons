@@ -42,7 +42,6 @@ ThinShellDemonsMetricv4< TFixedMesh, TMovingMesh, TInternalComputationValueType 
   fixedITKMesh = nullptr;
   movingITKMesh = nullptr;
   fixedCurvature = nullptr;
-  adaptor = new kdtree_adaptor;
 }
 
 /* Set the points and cells for the mesh */
@@ -297,11 +296,8 @@ ThinShellDemonsMetricv4< TFixedMesh, TMovingMesh, TInternalComputationValueType 
   nanoflann::KNNResultSet<num_t> resultSet(num_results);
   resultSet.init(&mPointId, &out_dist_sqr);
   
-  std::cout << "Finding point " << fpoint << std::endl;
-  this->m_MovingTransformedFeaturePointsLocator1->findNeighbors(
+  this->adaptor->index->findNeighbors(
       resultSet, &fpoint[0], nanoflann::SearchParams(10));
-
-  std::cout << "Found point " << mPointId << " " << out_dist_sqr << std::endl;
 
   //PointIdentifier mPointId = this->m_MovingTransformedFeaturePointsLocator->FindClosestPoint(fpoint);
   PointType closestPoint = this->m_MovingTransformedPointSet->GetPoint(mPointId);
@@ -467,13 +463,18 @@ ThinShellDemonsMetricv4< TFixedMesh, TMovingMesh, TInternalComputationValueType 
         features->GetPoints());
     this->m_MovingTransformedFeaturePointsLocator->Initialize();
 
-    adaptor->SetPoints(features->GetPoints());
-    // Instantiate KDD Point Locator
-    this->m_MovingTransformedFeaturePointsLocator1 = new index_t(FixedPointDimension+1, nanoflann::KDTreeSingleIndexAdaptorParams(10));
-    this->m_MovingTransformedFeaturePointsLocator1->dataset = adaptor;
-    this->m_MovingTransformedFeaturePointsLocator1->buildIndex();
+    if (point_dataset.size() == 0){
+      point_dataset.resize(features->GetPoints()->Size());
+      for(int kj=0; kj < features->GetPoints()->Size(); ++kj){
+        point_dataset[kj].resize(4);
+        for(int kt=0; kt < FixedPointDimension+1; ++kt){
+          auto temp_point = features->GetPoints()->GetElement(kj);
+          point_dataset[kj][kt] = temp_point[kt];
+        }
+      }
+    }
 
-    std::cout << "Tree Index Built " << std::endl;
+    adaptor = new my_kd_tree_t(4, point_dataset, 10);
   }
 
   //Compute confidence sigma
