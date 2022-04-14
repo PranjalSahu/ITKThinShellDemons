@@ -23,6 +23,7 @@
 #include <itkDisplacementFieldTransform.h>
 //#include "itkMeshDisplacementTransform.h"
 #include "itkConjugateGradientLineSearchOptimizerv4.h"
+#include "itkGradientDescentOptimizerv4.h"
 #include "itkLBFGS2Optimizerv4.h"
 #include "itkMesh.h"
 #include "itkMeshFileReader.h"
@@ -75,7 +76,7 @@ int itkThinShellDemonsTestv4_Displacement( int args, char *argv [])
   Initialize fixed mesh polydata reader
   */
   ReaderType::Pointer fixedPolyDataReader = ReaderType::New();
-  fixedPolyDataReader->SetFileName(argv[1]);
+  fixedPolyDataReader->SetFileName("/home/pranjal.sahu/SlicerMorph/fixedMesh.vtk");
   try
   {
     fixedPolyDataReader->Update();
@@ -92,7 +93,7 @@ int itkThinShellDemonsTestv4_Displacement( int args, char *argv [])
   Initialize moving mesh polydata reader
   */
   ReaderType::Pointer  movingPolyDataReader = ReaderType::New();
-  movingPolyDataReader->SetFileName(argv[2]);
+  movingPolyDataReader->SetFileName("/home/pranjal.sahu/SlicerMorph/movingMesh.vtk");
   try
   {
     movingPolyDataReader->Update();
@@ -196,13 +197,25 @@ int itkThinShellDemonsTestv4_Displacement( int args, char *argv [])
   optimizer->SetScalesEstimator( shiftScaleEstimator );
 */
 
-  typedef itk::ConjugateGradientLineSearchOptimizerv4 OptimizerType;
+  // typedef itk::ConjugateGradientLineSearchOptimizerv4 OptimizerType;
+  // OptimizerType::Pointer optimizer = OptimizerType::New();
+  // optimizer->SetNumberOfIterations( 50 );
+  // optimizer->SetScalesEstimator( shiftScaleEstimator );
+  // optimizer->SetMaximumStepSizeInPhysicalUnits( 0.5 );
+  // optimizer->SetMinimumConvergenceValue( 0.0 );
+  // optimizer->SetConvergenceWindowSize( 10 );
+  // optimizer->SetMetric(metric);
+
+
+  typedef itk::GradientDescentOptimizerv4 OptimizerType;
   OptimizerType::Pointer optimizer = OptimizerType::New();
   optimizer->SetNumberOfIterations( 50 );
-  optimizer->SetScalesEstimator( shiftScaleEstimator );
+  //optimizer->SetScalesEstimator( shiftScaleEstimator );
   optimizer->SetMaximumStepSizeInPhysicalUnits( 0.5 );
-  optimizer->SetMinimumConvergenceValue( 0.0 );
-  optimizer->SetConvergenceWindowSize( 10 );
+  optimizer->SetLearningRate( 0.0001 );
+  //optimizer->SetMinimumConvergenceValue( 0.0 );
+  //optimizer->SetConvergenceWindowSize( 10 );
+  optimizer->SetMetric(metric);
 
   using CommandType = CommandIterationUpdate<OptimizerType>;
   CommandType::Pointer observer = CommandType::New();
@@ -222,7 +235,8 @@ int itkThinShellDemonsTestv4_Displacement( int args, char *argv [])
   std::cout << "Start Value= " << metric->GetValue() << std::endl;
   try
     {
-    registration->Update();
+      //optimizer->StartOptimization();
+      registration->Update();
     }
   catch( itk::ExceptionObject &e )
     {
@@ -230,17 +244,17 @@ int itkThinShellDemonsTestv4_Displacement( int args, char *argv [])
     return EXIT_FAILURE;
     }
 
-  TransformType::Pointer tx = registration->GetModifiableTransform();
-  metric->SetTransform(tx);
-  std::cout << "Solution Value= " << metric->GetValue() << std::endl;
-  for (PointIdentifier n = 0; n < movingMesh->GetNumberOfPoints(); n++)
-  {
-    movingMesh->SetPoint(n, tx->TransformPoint(movingMesh->GetPoint(n)));
-  }
+  // TransformType::Pointer tx = registration->GetModifiableTransform();
+  // metric->SetTransform(tx);
+  // std::cout << "Solution Value= " << metric->GetValue() << std::endl;
+  // for (PointIdentifier n = 0; n < movingMesh->GetNumberOfPoints(); n++)
+  // {
+  //   movingMesh->SetPoint(n, tx->TransformPoint(movingMesh->GetPoint(n)));
+  // }
 
-  WriterType::Pointer writer = WriterType::New();
-  writer->SetInput(movingMesh);
-  writer->SetFileName("displacedMovingMesh.vtk");
-  writer->Update();
+  // WriterType::Pointer writer = WriterType::New();
+  // writer->SetInput(movingMesh);
+  // writer->SetFileName("displacedMovingMesh.vtk");
+  // writer->Update();
   return EXIT_SUCCESS;
 }

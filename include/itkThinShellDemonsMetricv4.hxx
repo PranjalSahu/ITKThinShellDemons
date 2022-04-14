@@ -333,6 +333,9 @@ ThinShellDemonsMetricv4< TFixedMesh, TMovingMesh, TInternalComputationValueType 
 {
   /* The call to Superclass initializes the m_MovingTransformedPointSet */
   Superclass::InitializePointSets();
+
+  std::cout << "InitializePointSets from the TSD Metric " << std::endl;
+
   this->InitializeFeaturePointsLocators();
 }
 
@@ -448,7 +451,7 @@ ThinShellDemonsMetricv4< TFixedMesh, TMovingMesh, TInternalComputationValueType 
 ::InitializeFeaturePointsLocators()
   const
 {
-  //std::cout << "Inside InitializeFeaturePointsLocators " << std::endl;
+  std::cout << "Inside InitializeFeaturePointsLocators " << std::endl;
 
   //Update fixed curvature
   if(!fixedCurvature || this->m_UpdateFeatureMatchingAtEachIteration){

@@ -361,7 +361,7 @@ struct L1_Adaptor
     using ElementType  = T;
     using DistanceType = _DistanceType;
 
-    const DataSource * data_source;
+    const DataSource &data_source;
 
     L1_Adaptor(const DataSource& _data_source) : data_source(_data_source) {}
 
