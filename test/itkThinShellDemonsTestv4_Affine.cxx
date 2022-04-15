@@ -28,7 +28,8 @@
 #include "itkMeshFileReader.h"
 #include "itkMeshFileWriter.h"
 
-template<typename TFilter>
+namespace{
+  template<typename TFilter>
 class CommandIterationUpdate : public itk::Command
 {
 public:
@@ -61,6 +62,7 @@ public:
     std::cout << std::endl;
     }
 };
+}
 
 int itkThinShellDemonsTestv4_Affine( int args, char *argv [])
 {

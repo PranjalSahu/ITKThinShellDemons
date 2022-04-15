@@ -24,12 +24,14 @@
 #include "itkBSplineTransformInitializer.h"
 //#include "itkMeshDisplacementTransform.h"
 #include "itkConjugateGradientLineSearchOptimizerv4.h"
+#include "itkRegularStepGradientDescentOptimizerv4.h"
 #include "itkGradientDescentOptimizerv4.h"
 #include "itkLBFGS2Optimizerv4.h"
 #include "itkMesh.h"
 #include "itkMeshFileReader.h"
 #include "itkMeshFileWriter.h"
 
+namespace{
 template<typename TFilter>
 class CommandIterationUpdate : public itk::Command
 {
@@ -56,13 +58,15 @@ public:
 
     if( !optimizer )
       {
-      itkGenericExceptionMacro( "Error dynamic_cast failed" );
+        itkGenericExceptionMacro( "Error dynamic_cast failed" );
       }
-    std::cout << "It: " << optimizer->GetCurrentIteration();
-    std::cout << " metric value: " << optimizer->GetCurrentMetricValue();
-    std::cout << std::endl;
+    
+    std::cout << "It: " << optimizer->GetCurrentIteration() << std::endl;
+    std::cout << "Metric1 value: " << optimizer->GetCurrentMetricValue() << std::endl;
+    std::cout << "Parameters : " << optimizer->GetCurrentPosition()  << std::endl;
     }
 };
+}
 
 int itkThinShellDemonsTestv4_BSpline( int args, char *argv [])
 {
@@ -174,7 +178,7 @@ int itkThinShellDemonsTestv4_BSpline( int args, char *argv [])
   auto transformInitializer = InitializerType::New();
 
 
-  int numberOfGridNodesInOneDimension = 5;
+  int numberOfGridNodesInOneDimension = 6;
 
   TransformType::MeshSizeType meshSize;
   meshSize.Fill(numberOfGridNodesInOneDimension - SplineOrder);
@@ -237,16 +241,19 @@ int itkThinShellDemonsTestv4_BSpline( int args, char *argv [])
   // optimizer->SetMetric(metric);
 
 
-  typedef itk::GradientDescentOptimizerv4 OptimizerType;
+  //typedef itk::GradientDescentOptimizerv4 OptimizerType;
+  typedef itk::RegularStepGradientDescentOptimizerv4<double> OptimizerType;
   OptimizerType::Pointer optimizer = OptimizerType::New();
-  optimizer->SetNumberOfIterations( 50);
+  optimizer->SetNumberOfIterations( 25);
   //optimizer->SetScalesEstimator( shiftScaleEstimator );
-  optimizer->SetMaximumStepSizeInPhysicalUnits( 10 );
+  optimizer->SetMaximumStepSizeInPhysicalUnits(10);
   optimizer->SetLearningRate(10);
   //optimizer->SetMinimumConvergenceValue( 0.0 );
   //optimizer->SetConvergenceWindowSize( 10 );
   optimizer->SetMetric(metric);
+  //optimizer-
 
+  std::cout << "Optimizer Setting done " << std::endl;
   using CommandType = CommandIterationUpdate<OptimizerType>;
   CommandType::Pointer observer = CommandType::New();
   optimizer->AddObserver( itk::IterationEvent(), observer );
@@ -262,7 +269,7 @@ int itkThinShellDemonsTestv4_BSpline( int args, char *argv [])
   registration->SetMetric(metric);
   registration->SetOptimizer(optimizer);
 
-  std::cout << "Start Value= " << metric->GetValue() << std::endl;
+  std::cout << "Start Value = " << metric->GetValue() << std::endl;
   try
     {
       //optimizer->StartOptimization();
@@ -274,17 +281,17 @@ int itkThinShellDemonsTestv4_BSpline( int args, char *argv [])
     return EXIT_FAILURE;
     }
 
-  // TransformType::Pointer tx = registration->GetModifiableTransform();
-  // metric->SetTransform(tx);
-  // std::cout << "Solution Value= " << metric->GetValue() << std::endl;
-  // for (PointIdentifier n = 0; n < movingMesh->GetNumberOfPoints(); n++)
-  // {
-  //   movingMesh->SetPoint(n, tx->TransformPoint(movingMesh->GetPoint(n)));
-  // }
+  TransformType::Pointer tx = registration->GetModifiableTransform();
+  metric->SetTransform(tx);
+  std::cout << "Solution Value= " << metric->GetValue() << std::endl;
+  for (PointIdentifier n = 0; n < movingMesh->GetNumberOfPoints(); n++)
+  {
+    movingMesh->SetPoint(n, tx->TransformPoint(movingMesh->GetPoint(n)));
+  }
 
-  // WriterType::Pointer writer = WriterType::New();
-  // writer->SetInput(movingMesh);
-  // writer->SetFileName("displacedMovingMesh.vtk");
-  // writer->Update();
+  WriterType::Pointer writer = WriterType::New();
+  writer->SetInput(movingMesh);
+  writer->SetFileName("bsplineMovingMesh2.vtk");
+  writer->Update();
   return EXIT_SUCCESS;
 }
